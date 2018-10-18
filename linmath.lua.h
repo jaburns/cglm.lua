@@ -1,5 +1,6 @@
 #pragma once
 
 #include "linmath.h"
+#include "lua/lua.h"
 
-// TODO implement
+extern void load_linmath_lua(lua_State *L);
