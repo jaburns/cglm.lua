@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "linmath.lua.h"
+#include "../linmath.lua.h"
 
 int main (int argc, char **argv)
 {

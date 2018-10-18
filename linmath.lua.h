@@ -1,5 +1,5 @@
 #pragma once
 
-#include "linmath.h/linmath.h"
+#include "linmath.h"
 
 // TODO implement
