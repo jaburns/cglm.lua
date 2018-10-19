@@ -1,2 +1,5 @@
 /test/run_test
 /test/lua
+.vs
+*.vcxproj.user
+/test/x64

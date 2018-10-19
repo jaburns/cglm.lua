@@ -1,7 +1,7 @@
 #include "linmath.lua.h"
 
-#include "lua/lauxlib.h"
-#include "lua/lualib.h"
+#include <lauxlib.h>
+#include <lualib.h>
 
 
 static const char *VEC_DIMENSIONS[4] = { "x", "y", "z", "w" };
@@ -225,6 +225,7 @@ static const FuncDef vec2_instance_meta_funcs[] = {
 DECL_ARRAY_SIZE(num_vec2_instance_meta_funcs, vec2_instance_meta_funcs);
 
 static const FuncDef vec2_instance_funcs[] = {
+    { "__add", l_vec2_add },
 };
 DECL_ARRAY_SIZE(num_vec2_instance_funcs, vec2_instance_funcs);
 
