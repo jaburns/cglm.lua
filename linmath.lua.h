@@ -13,4 +13,5 @@ extern void lml_push_vec4(lua_State *L, vec4 v);
 extern void lml_get_vec4(lua_State *L, int stack_index, vec4 v);
 extern void lml_push_quat(lua_State *L, quat v);
 extern void lml_get_quat(lua_State *L, int stack_index, quat v);
+extern void lml_push_mat4x4(lua_State *L, mat4x4 m);
 extern void lml_get_mat4x4(lua_State *L, int stack_index, mat4x4 m);
