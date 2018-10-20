@@ -30,6 +30,7 @@ static void lml_get_vec(lua_State *L, int stack_index, float *v, int dim)
     {
         lua_getfield(L, stack_index, VEC_DIMENSIONS[i]);
         v[i] = (float)luaL_checknumber(L, -1);
+        lua_pop(L, 1);
     }
 }
 
