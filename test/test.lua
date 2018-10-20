@@ -6,7 +6,7 @@ end
 printvec(vec3(10,10,10) + vec3(5,100,5))
 
 v0 = vec3(2, 3, 4)
-v1 = quat.angle_axis(math.pi, vec3(0,1,0)):mul(v0)
+v1 = quat.angle_axis(math.pi, vec3(0,1,0)):mul_vec3(v0)
 
 printvec(v0)
 printvec(v1)

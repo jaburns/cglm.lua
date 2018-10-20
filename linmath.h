@@ -110,7 +110,7 @@ static inline void mat4x4_row(vec4 r, mat4x4 M, int i)
 	for(k=0; k<4; ++k)
 		r[k] = M[k][i];
 }
-static inline void mat4x4_col(vec4 r, mat4x4 M, int i)
+static inline void mat5x4_col(vec4 r, mat4x4 M, int i)
 {
 	int k;
 	for(k=0; k<4; ++k)
