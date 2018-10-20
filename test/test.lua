@@ -1,34 +1,35 @@
 
 function printvec(v)
-    print(v.x .. " " .. v.y)
+    print(v.x .. " " .. v.y .. " " .. v.z)
 end
 
-v0 = vec2(2, 3)
-v1 = vec2(10, 20)
+printvec(vec3(10,10,10) + vec3(5,100,5))
 
-print(tostring((v1 * 5).x))
+v0 = vec3(2, 3, 4)
+v1 = quat.angle_axis(math.pi, vec3(0,1,0)):mul(v0)
+
+printvec(v0)
+printvec(v1)
 
 
 --[[
-local v3_instance_meta_ = {
+local vec3_instance_meta_ = {
     __add = function(l, r)
-        return v3(l.x + r.x, l.y + r.y, l.z + r.z)
+        return vec3(l.x + r.x, l.y + r.y, l.z + r.z)
     end,
     __index = {
-        cross = function(l, r)
-            -- instance function cross
-            return v3(99, 99, 99)
+        hello = function(l, r)
+            return "instance function hello"
         end
     }
 }
-
-local v3_static_meta_ = {
+local vec3_static_meta_ = {
     __call = function(t, x1, y1, z1)
         return setmetatable({
             x = x1,
             y = y1,
             z = z1
-        }, v3_instance_meta_)
+        }, vec3_instance_meta_)
     end,
     __index = {
         doge = function()
@@ -36,9 +37,11 @@ local v3_static_meta_ = {
         end
     }
 }
-v3 = setmetatable({}, v3_static_meta_)
-vx = v3(1,2,3) + v3(4,5,6)
-print(vx:cross(v3(1,2,3)).x .. "")
+vec3 = setmetatable({}, vec3_static_meta_)
+
+vx = vec3(1,2,3) + vec3(4,5,6)
+vx:hello(vec3(1,1,1))
+vx.doge()
 
 
 
