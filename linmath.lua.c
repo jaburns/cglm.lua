@@ -66,6 +66,7 @@ void lml_get_mat4x4(lua_State *L, int stack_index, mat4x4 m)
     {
         lua_getfield(L, stack_index, COLUMN_NAMES[i]);
         lml_get_vec4(L, -1, m[i]);
+        lua_pop(L, 1);
     }
 }
 
