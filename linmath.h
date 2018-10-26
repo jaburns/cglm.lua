@@ -361,11 +361,12 @@ static inline void mat4x4_ortho(mat4x4 M, float l, float r, float b, float t, fl
 	M[3][2] = -(f+n)/(f-n);
 	M[3][3] = 1.f;
 }
-static inline void mat4x4_perspective(mat4x4 m, float y_fov, float aspect, float n, float f)
+static inline void mat4x4_perspective(mat4x4 m, float y_fov, float aspect, float n, float f, int left_handed)
 {
 	/* NOTE: Degrees are an unhandy unit to work with.
 	 * linmath.h uses radians for everything! */
 	float const a = 1.f / tan(y_fov / 2.f);
+	float const h = left_handed ? 1.f : -1.f;
 
 	m[0][0] = a / aspect;
 	m[0][1] = 0.f;
@@ -379,12 +380,12 @@ static inline void mat4x4_perspective(mat4x4 m, float y_fov, float aspect, float
 
 	m[2][0] = 0.f;
 	m[2][1] = 0.f;
-	m[2][2] = -((f + n) / (f - n));
-	m[2][3] = -1.f;
+	m[2][2] = h * (f + n) / (f - n);
+	m[2][3] = h;
 
 	m[3][0] = 0.f;
 	m[3][1] = 0.f;
-	m[3][2] = -((2.f * f * n) / (f - n));
+	m[3][2] = -(2.f * f * n) / (f - n);
 	m[3][3] = 0.f;
 }
 static inline void mat4x4_look_at(mat4x4 m, vec3 eye, vec3 center, vec3 up)
