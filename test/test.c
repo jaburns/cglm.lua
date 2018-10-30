@@ -18,7 +18,7 @@ int main (int argc, char **argv)
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
 
-    lml_load_types(L);
+    glmlua_load_types(L);
 
     lua_pushcfunction(L, l_print);
     lua_setglobal(L, "print");

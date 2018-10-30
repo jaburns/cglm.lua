@@ -41,7 +41,7 @@ function test_vec2()
     assert_float("vec2 cross", vec2(2,3):cross(vec2(5,6)), -3)
 
     assert_vec2("vec2 normalize", vec2(2,3):normalize(), vec2(2,3) * (1 / math.sqrt(13)))
-    assert_float("vec2 sqrLength", vec2(2,3):sqrLength(), 13)
+    assert_float("vec2 sqr_length", vec2(2,3):sqr_length(), 13)
 end
 
 function test_vec3()
@@ -55,7 +55,7 @@ function test_vec3()
     assert_vec3("vec3 cross", vec3(1,2,3):cross(vec3(4,5,6)), vec3(-3,6,-3))
 
     assert_vec3("vec3 normalize", vec3(1,2,3):normalize(), vec3(1,2,3) * (1 / math.sqrt(14)))
-    assert_float("vec3 sqrLength", vec3(1,2,3):sqrLength(), 14)
+    assert_float("vec3 sqr_length", vec3(1,2,3):sqr_length(), 14)
 end
 
 function test_vec4()
@@ -68,15 +68,15 @@ function test_vec4()
     assert_float("vec4 dot", vec4(1,2,3,4):dot(vec4(5,6,7,8)), 70)
 
     assert_vec4("vec4 normalize", vec4(1,2,3,4):normalize(), vec4(1,2,3,4) * (1 / math.sqrt(30)))
-    assert_float("vec4 sqrLength", vec4(1,2,3,4):sqrLength(), 30)
+    assert_float("vec4 sqr_length", vec4(1,2,3,4):sqr_length(), 30)
 end
 
 function test_quat()
-
+    -- TODO
 end
 
 function test_mat4()
-
+    -- TODO
 end
 
 function run_tests()
