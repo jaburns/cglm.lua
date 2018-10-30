@@ -1,2 +1,2 @@
-# linmath.lua
-Lua bindings for C library linmath.h
+# cglm.lua
+Some Lua bindings for the [C GLM math library](https://github.com/recp/cglm)
