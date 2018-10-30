@@ -3,7 +3,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
-#include "../linmath.lua.h"
+#include "../cglm.lua.h"
 
 static int l_print (lua_State *L)
 {

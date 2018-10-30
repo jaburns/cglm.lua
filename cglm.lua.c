@@ -1,4 +1,4 @@
-#include "linmath.lua.h"
+#include "cglm.lua.h"
 #include <lauxlib.h>
 #include <lualib.h>
 
@@ -40,10 +40,10 @@ void lml_push_vec3(lua_State *L, vec3 v) { lml_push_vec(L, v, 3, "vec3_instance_
 void lml_get_vec3(lua_State *L, int stack_index, vec3 v) { lml_get_vec(L, stack_index, v, 3); }
 void lml_push_vec4(lua_State *L, vec4 v) { lml_push_vec(L, v, 4, "vec4_instance_meta__"); }
 void lml_get_vec4(lua_State *L, int stack_index, vec4 v) { lml_get_vec(L, stack_index, v, 4); }
-void lml_push_quat(lua_State *L, quat v) { lml_push_vec(L, v, 4, "quat_instance_meta__"); }
-void lml_get_quat(lua_State *L, int stack_index, quat v) { lml_get_vec(L, stack_index, v, 4); }
+void lml_push_quat(lua_State *L, versor v) { lml_push_vec(L, v, 4, "quat_instance_meta__"); }
+void lml_get_quat(lua_State *L, int stack_index, versor v) { lml_get_vec(L, stack_index, v, 4); }
 
-void lml_push_mat4x4(lua_State *L, mat4x4 m)
+void lml_push_mat4(lua_State *L, mat4 m)
 {
     lua_newtable(L);
 
@@ -54,11 +54,11 @@ void lml_push_mat4x4(lua_State *L, mat4x4 m)
         lua_settable(L, -3);
     }
 
-    lua_getglobal(L, "mat4x4_instance_meta__");
+    lua_getglobal(L, "mat4_instance_meta__");
     lua_setmetatable(L, -2);
 }
 
-void lml_get_mat4x4(lua_State *L, int stack_index, mat4x4 m)
+void lml_get_mat4(lua_State *L, int stack_index, mat4 m)
 {
     luaL_checktype(L, stack_index, LUA_TTABLE);
 
@@ -70,6 +70,42 @@ void lml_get_mat4x4(lua_State *L, int stack_index, mat4x4 m)
     }
 }
 
+// =====  vec2 functions  ======================================================
+
+static void ex_vec2_add(vec2 a, vec2 b, vec2 r)
+{
+    r[0] = a[0] + b[0];
+    r[1] = a[1] + b[1];
+}
+static void ex_vec2_sub(vec2 a, vec2 b, vec2 r)
+{
+    r[0] = a[0] - b[0];
+    r[1] = a[1] - b[1];
+}
+static void ex_vec2_scale(vec2 a, float b, vec2 r)
+{
+    r[0] = a[0] * b;
+    r[1] = a[1] * b;
+}
+static void ex_vec2_dot(vec2 a, vec2 b, float *r)
+{
+    *r = a[0]*b[0] + a[1]*b[1];
+}
+static void ex_vec2_cross(vec2 a, vec2 b, float *r)
+{
+    *r = a[0]*b[1] - a[1]*b[0];
+}
+static void ex_vec2_norm2(vec2 a, float *r)
+{
+    ex_vec2_dot(a, a, r);
+}
+static void ex_vec2_normalize_to(vec2 a, vec2 r)
+{
+    float sqr_len;
+    ex_vec2_norm2(a, &sqr_len);
+    ex_vec2_scale(a, 1.f / sqrtf(sqr_len), r);
+}
+
 // =====  operations  ==========================================================
 
 typedef float vec1[1];
@@ -77,18 +113,18 @@ typedef float vec1[1];
 static void lml_push_vec1(lua_State *L, vec1 v) { lua_pushnumber(L, (double)v[0]); }
 static void lml_get_vec1(lua_State *L, int stack_index, vec1 v) { v[0] = (float)luaL_checknumber(L, stack_index); }
 
-#define DECL_UNARY_OP(R, A, op) \
+#define DECL_UNARY_OP(A, R, op) \
 static int l_##op(lua_State *L) \
 {                               \
     R r;                        \
     A a;                        \
     lml_get_##A (L, 1, a);      \
-    op(r, a);                   \
+    op(a, r);                   \
     lml_push_##R (L, r);        \
     return 1;                   \
 }
 
-#define DECL_BINARY_OP(R, A, B, op) \
+#define DECL_BINARY_OP(A, B, R, op) \
 static int l_##op(lua_State *L)     \
 {                                   \
     R r;                            \
@@ -96,12 +132,12 @@ static int l_##op(lua_State *L)     \
     B b;                            \
     lml_get_##A (L, 1, a);          \
     lml_get_##B (L, 2, b);          \
-    op(r, a, b);                    \
+    op(a, b, r);                    \
     lml_push_##R (L, r);            \
     return 1;                       \
 }
 
-#define DECL_BINARY_WITH_FLOAT(R, A, op)   \
+#define DECL_BINARY_WITH_FLOAT(A, R, op)   \
 static int l_##op(lua_State *L)            \
 {                                          \
     R r;                                   \
@@ -116,57 +152,51 @@ static int l_##op(lua_State *L)            \
         lml_get_##A (L, 1, a);             \
     }                                      \
                                            \
-    op (r, a, f);                          \
+    op (a, f, r);                          \
     lml_push_##R (L, r);                   \
     return 1;                              \
 }
 
 #define DECL_BINARY_TO_FLOAT_WRAPPER(T, name) \
-    static void T##_##name##_wrap(float *r, const T a, const T b) { *r = T##_##name(a, b); }
-
-DECL_BINARY_TO_FLOAT_WRAPPER(vec2, mul_inner);
-DECL_BINARY_TO_FLOAT_WRAPPER(vec3, mul_inner);
-DECL_BINARY_TO_FLOAT_WRAPPER(vec4, mul_inner);
-DECL_BINARY_TO_FLOAT_WRAPPER(quat, inner_product);
+    static void name##_wrap(const T a, const T b, float *r) { *r = name(a, b); }
 
 #define DECL_UNARY_TO_FLOAT_WRAPPER(T, name) \
-    static void T##_##name##_wrap(float *r, const T a) { *r = T##_##name(a); }
+    static void name##_wrap(const T a, float *r) { *r = name(a); }
 
-DECL_UNARY_TO_FLOAT_WRAPPER(vec2, len);
-DECL_UNARY_TO_FLOAT_WRAPPER(vec3, len);
-DECL_UNARY_TO_FLOAT_WRAPPER(vec4, len);
 
-DECL_BINARY_OP(vec2, vec2, vec2, vec2_add);
-DECL_BINARY_OP(vec2, vec2, vec2, vec2_sub);
-DECL_BINARY_OP(vec2, vec2, vec2, vec2_min);
-DECL_BINARY_OP(vec2, vec2, vec2, vec2_max);
-DECL_BINARY_WITH_FLOAT(vec2, vec2, vec2_scale);
-DECL_BINARY_OP(vec1, vec2, vec2, vec2_mul_inner_wrap);
-DECL_UNARY_OP(vec2, vec2, vec2_norm);
-DECL_UNARY_OP(vec1, vec2, vec2_len_wrap);
+DECL_BINARY_OP(vec2, vec2, vec2, ex_vec2_add);
+DECL_BINARY_OP(vec2, vec2, vec2, ex_vec2_sub);
+DECL_BINARY_WITH_FLOAT(vec2, vec2, ex_vec2_scale);
+DECL_BINARY_OP(vec2, vec2, vec1, ex_vec2_dot);
+DECL_BINARY_OP(vec2, vec2, vec1, ex_vec2_cross);
+DECL_UNARY_OP(vec2, vec2, ex_vec2_normalize_to);
+DECL_UNARY_OP(vec2, vec1, ex_vec2_norm2);
 
-DECL_BINARY_OP(vec3, vec3, vec3, vec3_add);
-DECL_BINARY_OP(vec3, vec3, vec3, vec3_sub);
-DECL_BINARY_OP(vec3, vec3, vec3, vec3_min);
-DECL_BINARY_OP(vec3, vec3, vec3, vec3_max);
-DECL_BINARY_WITH_FLOAT(vec3, vec3, vec3_scale);
-DECL_BINARY_OP(vec1, vec3, vec3, vec3_mul_inner_wrap);
-DECL_UNARY_OP(vec3, vec3, vec3_norm);
-DECL_UNARY_OP(vec1, vec3, vec3_len_wrap);
-DECL_BINARY_OP(vec3, vec3, vec3, vec3_mul_cross);
-DECL_BINARY_OP(vec3, vec3, vec3, vec3_reflect);
 
-DECL_BINARY_OP(vec4, vec4, vec4, vec4_add);
-DECL_BINARY_OP(vec4, vec4, vec4, vec4_sub);
-DECL_BINARY_OP(vec4, vec4, vec4, vec4_min);
-DECL_BINARY_OP(vec4, vec4, vec4, vec4_max);
-DECL_BINARY_WITH_FLOAT(vec4, vec4, vec4_scale);
-DECL_BINARY_OP(vec1, vec4, vec4, vec4_mul_inner_wrap);
-DECL_UNARY_OP(vec4, vec4, vec4_norm);
-DECL_UNARY_OP(vec1, vec4, vec4_len_wrap);
-DECL_BINARY_OP(vec4, vec4, vec4, vec4_mul_cross);
-DECL_BINARY_OP(vec4, vec4, vec4, vec4_reflect);
+DECL_BINARY_TO_FLOAT_WRAPPER(vec3, glm_vec_dot);
+DECL_UNARY_TO_FLOAT_WRAPPER(vec3, glm_vec_norm2);
 
+DECL_BINARY_OP(vec3, vec3, vec3, glm_vec_add);
+DECL_BINARY_OP(vec3, vec3, vec3, glm_vec_sub);
+DECL_BINARY_WITH_FLOAT(vec3, vec3, glm_vec_scale);
+DECL_BINARY_OP(vec3, vec3, vec1, glm_vec_dot_wrap);
+DECL_UNARY_OP(vec3, vec3, glm_vec_normalize_to);
+DECL_UNARY_OP(vec3, vec1, glm_vec_norm2_wrap);
+DECL_BINARY_OP(vec3, vec3, vec3, glm_vec_cross);
+
+
+DECL_BINARY_TO_FLOAT_WRAPPER(vec4, glm_vec4_dot);
+DECL_UNARY_TO_FLOAT_WRAPPER(vec4, glm_vec4_norm2);
+
+DECL_BINARY_OP(vec4, vec4, vec4, glm_vec4_add);
+DECL_BINARY_OP(vec4, vec4, vec4, glm_vec4_sub);
+DECL_BINARY_WITH_FLOAT(vec4, vec4, glm_vec4_scale);
+DECL_BINARY_OP(vec4, vec4, vec1, glm_vec4_dot_wrap);
+DECL_UNARY_OP(vec4, vec4, glm_vec4_normalize_to);
+DECL_UNARY_OP(vec4, vec1, glm_vec4_norm2_wrap);
+
+/*
+DECL_BINARY_TO_FLOAT_WRAPPER(quat, glm_quat_dot);
 static void quat_rotate_wrap(quat r, float *angle, vec3 axis) { quat_rotate(r, *angle, axis); }
 
 DECL_BINARY_OP(quat, quat, quat, quat_add);
@@ -178,38 +208,39 @@ DECL_UNARY_OP(quat, quat, quat_conj);
 DECL_UNARY_OP(quat, quat, quat_norm);
 DECL_BINARY_OP(vec3, quat, vec3, quat_mul_vec3);
 DECL_BINARY_OP(quat, vec1, vec3, quat_rotate_wrap);
-DECL_UNARY_OP(quat, mat4x4, quat_from_mat4x4);
+DECL_UNARY_OP(quat, mat4, quat_from_mat4);
 
-static void mat4x4_row_wrap(vec4 r, mat4x4 M, float *i) { mat4x4_row(r, M, (int)(*i)); }
-static void mat4x4_rotate_X_wrap(mat4x4 Q, mat4x4 M, float *angle) { mat4x4_rotate_X(Q, M, *angle); }
-static void mat4x4_rotate_Y_wrap(mat4x4 Q, mat4x4 M, float *angle) { mat4x4_rotate_Y(Q, M, *angle); }
-static void mat4x4_rotate_Z_wrap(mat4x4 Q, mat4x4 M, float *angle) { mat4x4_rotate_Z(Q, M, *angle); }
+static void mat4_row_wrap(vec4 r, mat4 M, float *i) { mat4_row(r, M, (int)(*i)); }
+static void mat4_rotate_X_wrap(mat4 Q, mat4 M, float *angle) { mat4_rotate_X(Q, M, *angle); }
+static void mat4_rotate_Y_wrap(mat4 Q, mat4 M, float *angle) { mat4_rotate_Y(Q, M, *angle); }
+static void mat4_rotate_Z_wrap(mat4 Q, mat4 M, float *angle) { mat4_rotate_Z(Q, M, *angle); }
 
-DECL_UNARY_OP(mat4x4, mat4x4, mat4x4_dup);
-DECL_UNARY_OP(mat4x4, mat4x4, mat4x4_transpose);
-DECL_BINARY_OP(vec4, mat4x4, vec1, mat4x4_row_wrap);
-DECL_BINARY_OP(mat4x4, mat4x4, mat4x4, mat4x4_add);
-DECL_BINARY_OP(mat4x4, mat4x4, mat4x4, mat4x4_sub);
-DECL_BINARY_WITH_FLOAT(mat4x4, mat4x4, mat4x4_scale);
-DECL_BINARY_OP(mat4x4, mat4x4, mat4x4, mat4x4_mul);
-DECL_BINARY_OP(vec4, mat4x4, vec4, mat4x4_mul_vec4);
-DECL_BINARY_OP(mat4x4, vec3, vec3, mat4x4_from_vec3_mul_outer);
-DECL_BINARY_OP(mat4x4, mat4x4, vec1, mat4x4_rotate_X_wrap);
-DECL_BINARY_OP(mat4x4, mat4x4, vec1, mat4x4_rotate_Y_wrap);
-DECL_BINARY_OP(mat4x4, mat4x4, vec1, mat4x4_rotate_Z_wrap);
-DECL_UNARY_OP(mat4x4, mat4x4, mat4x4_invert);
-DECL_UNARY_OP(mat4x4, mat4x4, mat4x4_orthonormalize);
-DECL_UNARY_OP(mat4x4, quat, mat4x4_from_quat);
-DECL_BINARY_OP(mat4x4, mat4x4, quat, mat4x4o_mul_quat);
+DECL_UNARY_OP(mat4, mat4, mat4_dup);
+DECL_UNARY_OP(mat4, mat4, mat4_transpose);
+DECL_BINARY_OP(vec4, mat4, vec1, mat4_row_wrap);
+DECL_BINARY_OP(mat4, mat4, mat4, mat4_add);
+DECL_BINARY_OP(mat4, mat4, mat4, mat4_sub);
+DECL_BINARY_WITH_FLOAT(mat4, mat4, mat4_scale);
+DECL_BINARY_OP(mat4, mat4, mat4, mat4_mul);
+DECL_BINARY_OP(vec4, mat4, vec4, mat4_mul_vec4);
+DECL_BINARY_OP(mat4, vec3, vec3, mat4_from_vec3_mul_outer);
+DECL_BINARY_OP(mat4, mat4, vec1, mat4_rotate_X_wrap);
+DECL_BINARY_OP(mat4, mat4, vec1, mat4_rotate_Y_wrap);
+DECL_BINARY_OP(mat4, mat4, vec1, mat4_rotate_Z_wrap);
+DECL_UNARY_OP(mat4, mat4, mat4_invert);
+DECL_UNARY_OP(mat4, mat4, mat4_orthonormalize);
+DECL_UNARY_OP(mat4, quat, mat4_from_quat);
+DECL_BINARY_OP(mat4, mat4, quat, mat4o_mul_quat);
 
-// TODO mat4x4_scale_aniso(mat4x4 M, mat4x4 a, float x, float y, float z)
-// TODO mat4x4_translate(mat4x4 T, float x, float y, float z)
-// TODO mat4x4_translate_in_place(mat4x4 T, float x, float y, float z) // T is in/out
-// TODO mat4x4_rotate(mat4x4 R, mat4x4 M, float x, float y, float z, float angle)
-// TODO mat4x4_frustum(mat4x4 M, float l, float r, float b, float t, float n, float f)
-// TODO mat4x4_ortho(mat4x4 M, float l, float r, float b, float t, float n, float f)
-// TODO mat4x4_perspective(mat4x4 m, float y_fov, float aspect, float n, float f)
-// TODO mat4x4_look_at(mat4x4 m, vec3 eye, vec3 center, vec3 up)
+// TODO mat4_scale_aniso(mat4 M, mat4 a, float x, float y, float z)
+// TODO mat4_translate(mat4 T, float x, float y, float z)
+// TODO mat4_translate_in_place(mat4 T, float x, float y, float z) // T is in/out
+// TODO mat4_rotate(mat4 R, mat4 M, float x, float y, float z, float angle)
+// TODO mat4_frustum(mat4 M, float l, float r, float b, float t, float n, float f)
+// TODO mat4_ortho(mat4 M, float l, float r, float b, float t, float n, float f)
+// TODO mat4_perspective(mat4 m, float y_fov, float aspect, float n, float f)
+// TODO mat4_look_at(mat4 m, vec3 eye, vec3 center, vec3 up)
+*/
 
 // =====  constructors  ========================================================
 
@@ -246,6 +277,7 @@ static int l_vec4(lua_State *L)
     return 1;
 }
 
+/*
 static int l_quat(lua_State *L)
 {
     quat v = {
@@ -258,14 +290,14 @@ static int l_quat(lua_State *L)
     return 1;
 }
 
-static int l_mat4x4(lua_State *L)
+static int l_mat4(lua_State *L)
 {
-    mat4x4 v;
-    mat4x4_identity(v);
-    lml_push_mat4x4(L, v);
+    mat4 v;
+    mat4_identity(v);
+    lml_push_mat4(L, v);
     return 1;
 }
-
+*/
 // =====  lua type definitions  ================================================
 
 typedef struct FuncDef
@@ -298,75 +330,67 @@ TypeDef;
 // -----  vec2  -----
 
 static const FuncDef vec2_instance_meta_funcs[] = {
-    { "__add", l_vec2_add },
-    { "__sub", l_vec2_sub },
-    { "__mul", l_vec2_scale },
+    { "__add", l_ex_vec2_add },
+    { "__sub", l_ex_vec2_sub },
+    { "__mul", l_ex_vec2_scale },
 };
 DECL_ARRAY_SIZE(num_vec2_instance_meta_funcs, vec2_instance_meta_funcs);
 
 static const FuncDef vec2_instance_funcs[] = {
-    { "dot", l_vec2_mul_inner_wrap },
-    { "normalize", l_vec2_norm },
-    { "length", l_vec2_len_wrap },
+    { "dot", l_ex_vec2_dot },
+    { "cross", l_ex_vec2_cross },
+    { "normalize", l_ex_vec2_normalize_to },
+    { "sqrLength", l_ex_vec2_norm2 },
 };
 DECL_ARRAY_SIZE(num_vec2_instance_funcs, vec2_instance_funcs);
 
-static const FuncDef vec2_static_funcs[] = {
-    { "min", l_vec2_min },
-    { "max", l_vec2_max },
-};
-DECL_ARRAY_SIZE(num_vec2_static_funcs, vec2_static_funcs);
+static const FuncDef vec2_static_funcs[] = { 0 };
+static const size_t num_vec2_static_funcs = 0;
+//DECL_ARRAY_SIZE(num_vec2_static_funcs, vec2_static_funcs);
 
 // -----  vec3  -----
 
 static const FuncDef vec3_instance_meta_funcs[] = {
-    { "__add", l_vec3_add },
-    { "__sub", l_vec3_sub },
-    { "__mul", l_vec3_scale },
+    { "__add", l_glm_vec_add },
+    { "__sub", l_glm_vec_sub },
+    { "__mul", l_glm_vec_scale },
 };
 DECL_ARRAY_SIZE(num_vec3_instance_meta_funcs, vec3_instance_meta_funcs);
 
 static const FuncDef vec3_instance_funcs[] = {
-    { "dot", l_vec3_mul_inner_wrap },
-    { "cross", l_vec3_mul_cross },
-    { "reflect", l_vec3_reflect },
-    { "normalize", l_vec3_norm },
-    { "length", l_vec3_len_wrap },
+    { "dot", l_glm_vec_dot_wrap },
+    { "cross", l_glm_vec_cross },
+    { "normalize", l_glm_vec_normalize_to },
+    { "sqrLength", l_glm_vec_norm2_wrap },
 };
 DECL_ARRAY_SIZE(num_vec3_instance_funcs, vec3_instance_funcs);
 
-static const FuncDef vec3_static_funcs[] = {
-    { "min", l_vec3_min },
-    { "max", l_vec3_max },
-};
-DECL_ARRAY_SIZE(num_vec3_static_funcs, vec3_static_funcs);
+static const FuncDef vec3_static_funcs[] = { 0 };
+static const size_t num_vec3_static_funcs = 0;
+//DECL_ARRAY_SIZE(num_vec3_static_funcs, vec3_static_funcs);
 
 // -----  vec4  -----
 
 static const FuncDef vec4_instance_meta_funcs[] = {
-    { "__add", l_vec4_add },
-    { "__sub", l_vec4_sub },
-    { "__mul", l_vec4_scale },
+    { "__add", l_glm_vec4_add },
+    { "__sub", l_glm_vec4_sub },
+    { "__mul", l_glm_vec4_scale },
 };
 DECL_ARRAY_SIZE(num_vec4_instance_meta_funcs, vec4_instance_meta_funcs);
 
 static const FuncDef vec4_instance_funcs[] = {
-    { "dot", l_vec4_mul_inner_wrap },
-    { "cross", l_vec4_mul_cross },
-    { "reflect", l_vec4_reflect },
-    { "normalize", l_vec4_norm },
-    { "length", l_vec4_len_wrap },
+    { "dot", l_glm_vec4_dot_wrap },
+    { "normalize", l_glm_vec4_normalize_to },
+    { "sqrLength", l_glm_vec4_norm2_wrap },
 };
 DECL_ARRAY_SIZE(num_vec4_instance_funcs, vec4_instance_funcs);
 
-static const FuncDef vec4_static_funcs[] = {
-    { "min", l_vec4_min },
-    { "max", l_vec4_max },
-};
-DECL_ARRAY_SIZE(num_vec4_static_funcs, vec4_static_funcs);
+static const FuncDef vec4_static_funcs[] = { 0 };
+static const size_t num_vec4_static_funcs = 0;
+//DECL_ARRAY_SIZE(num_vec4_static_funcs, vec4_static_funcs);
 
 // -----  quat  -----
-
+/*
 static const FuncDef quat_instance_meta_funcs[] = {
     { "__add", l_quat_add },
     { "__sub", l_quat_sub },
@@ -385,47 +409,48 @@ DECL_ARRAY_SIZE(num_quat_instance_funcs, quat_instance_funcs);
 
 static const FuncDef quat_static_funcs[] = {
     { "angle_axis", l_quat_rotate_wrap },
-    { "from_mat4x4", l_quat_from_mat4x4 },
+    { "from_mat4", l_quat_from_mat4 },
 };
 DECL_ARRAY_SIZE(num_quat_static_funcs, quat_static_funcs);
 
-// -----  mat4x4  -----
+// -----  mat4  -----
 
-static const FuncDef mat4x4_instance_meta_funcs[] = {
-    { "__add", l_mat4x4_add },
-    { "__sub", l_mat4x4_sub },
-    { "__mul", l_mat4x4_mul },
+static const FuncDef mat4_instance_meta_funcs[] = {
+    { "__add", l_mat4_add },
+    { "__sub", l_mat4_sub },
+    { "__mul", l_mat4_mul },
 };
-DECL_ARRAY_SIZE(num_mat4x4_instance_meta_funcs, mat4x4_instance_meta_funcs);
+DECL_ARRAY_SIZE(num_mat4_instance_meta_funcs, mat4_instance_meta_funcs);
 
-static const FuncDef mat4x4_instance_funcs[] = {
-    { "row", l_mat4x4_row_wrap },
-    { "clone", l_mat4x4_dup },
-    { "scale", l_mat4x4_scale },
-//  { "scale_aniso", l_mat4x4_scale_aniso },
-//  { "translate", l_mat4x4_translate_in_place },
-    { "transpose", l_mat4x4_transpose },
-    { "invert", l_mat4x4_invert },
-    { "orthonormalize", l_mat4x4_orthonormalize },
-    { "mul_vec4", l_mat4x4_mul_vec4 },
-    { "ortho_mul_quat", l_mat4x4o_mul_quat },
-    { "rotate_x", l_mat4x4_rotate_X_wrap },
-    { "rotate_y", l_mat4x4_rotate_Y_wrap },
-    { "rotate_z", l_mat4x4_rotate_Z_wrap },
-//  { "rotate", l_mat4x4_rotate },
+static const FuncDef mat4_instance_funcs[] = {
+    { "row", l_mat4_row_wrap },
+    { "clone", l_mat4_dup },
+    { "scale", l_mat4_scale },
+//  { "scale_aniso", l_mat4_scale_aniso },
+//  { "translate", l_mat4_translate_in_place },
+    { "transpose", l_mat4_transpose },
+    { "invert", l_mat4_invert },
+    { "orthonormalize", l_mat4_orthonormalize },
+    { "mul_vec4", l_mat4_mul_vec4 },
+    { "ortho_mul_quat", l_mat4o_mul_quat },
+    { "rotate_x", l_mat4_rotate_X_wrap },
+    { "rotate_y", l_mat4_rotate_Y_wrap },
+    { "rotate_z", l_mat4_rotate_Z_wrap },
+//  { "rotate", l_mat4_rotate },
 };
-DECL_ARRAY_SIZE(num_mat4x4_instance_funcs, mat4x4_instance_funcs);
+DECL_ARRAY_SIZE(num_mat4_instance_funcs, mat4_instance_funcs);
 
-static const FuncDef mat4x4_static_funcs[] = {
-    { "from_vec3_mul_outer", l_mat4x4_from_vec3_mul_outer },
-    { "from_quat", l_mat4x4_from_quat },
-//  { "translate", l_mat4x4_translate },
-//  { "frustum", l_mat4x4_frustum },
-//  { "ortho", l_mat4x4_ortho },
-//  { "perspective", l_mat4x4_perspective },
-//  { "look_at", l_mat4x4_look_at },
+static const FuncDef mat4_static_funcs[] = {
+    { "from_vec3_mul_outer", l_mat4_from_vec3_mul_outer },
+    { "from_quat", l_mat4_from_quat },
+//  { "translate", l_mat4_translate },
+//  { "frustum", l_mat4_frustum },
+//  { "ortho", l_mat4_ortho },
+//  { "perspective", l_mat4_perspective },
+//  { "look_at", l_mat4_look_at },
 };
-DECL_ARRAY_SIZE(num_mat4x4_static_funcs, mat4x4_static_funcs);
+DECL_ARRAY_SIZE(num_mat4_static_funcs, mat4_static_funcs);
+*/
 
 // =============================================================================
 
@@ -487,6 +512,6 @@ void lml_load_types(lua_State *L)
     BUILD_TYPE(vec2, L);
     BUILD_TYPE(vec3, L);
     BUILD_TYPE(vec4, L);
-    BUILD_TYPE(quat, L);
-    BUILD_TYPE(mat4x4, L);
+//  BUILD_TYPE(quat, L);
+//  BUILD_TYPE(mat4, L);
 }

@@ -39,7 +39,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\..\lua;$(SolutionDir)\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\cglm\include;$(SolutionDir)\..\lua;$(SolutionDir)\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -49,7 +49,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="test.c" />
-    <ClCompile Include="..\linmath.lua.c" />
+    <ClCompile Include="..\cglm.lua.c" />
     <ClCompile Include="..\lua\lapi.c" />
     <ClCompile Include="..\lua\lauxlib.c" />
     <ClCompile Include="..\lua\lbaselib.c" />
@@ -85,8 +85,7 @@
     <ClCompile Include="..\lua\lzio.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\linmath.lua.h" />
-    <ClInclude Include="..\linmath.h" />
+    <ClInclude Include="..\cglm.lua.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
