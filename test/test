@@ -5,5 +5,5 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 LUA_FILES="$(find ../lua -iname '*.c' | grep -v 'lbitlib.c' | grep -v 'lua.c')"
 
 rm -f run_test
-cc -g -o run_test -I../lua test.c ../linmath.lua.c $LUA_FILES
+cc -g -o run_test -I../lua test.c ../cglm.lua.c $LUA_FILES
 ./run_test
