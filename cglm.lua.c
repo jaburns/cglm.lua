@@ -212,8 +212,8 @@ DECL_BINARY_OP(versor, versor, versor, glm_quat_add);
 DECL_BINARY_OP(versor, versor, versor, glm_quat_sub);
 DECL_BINARY_OP(versor, versor, versor, glm_quat_mul);
 DECL_UNARY_OP(versor, versor, glm_quat_inv);
-DECL_UNARY_OP(versor, vec1, glm_quat_normalize_to);
-DECL_BINARY_OP(versor, vec3, vec3, glm_quat_rotate);
+DECL_UNARY_OP(versor, versor, glm_quat_normalize_to);
+DECL_BINARY_OP(versor, vec3, vec3, glm_quat_rotatev);
 DECL_TERNARY_OP(versor, versor, vec1, versor, glm_quat_slerp_wrap);
 
 DECL_BINARY_OP(mat4, mat4, mat4, glm_mat4_mul);
@@ -374,7 +374,8 @@ DECL_ARRAY_SIZE(num_quat_instance_meta_funcs, quat_instance_meta_funcs);
 static const FuncDef quat_instance_funcs[] = {
     { "inverse", l_glm_quat_inv },
     { "normalize", l_glm_quat_normalize_to },
-    { "mul_vec3", l_glm_quat_rotate },
+    { "sqr_length", l_glm_vec4_norm2_wrap },
+    { "mul_vec3", l_glm_quat_rotatev },
     { "slerp_to", l_glm_quat_slerp_wrap },
 };
 DECL_ARRAY_SIZE(num_quat_instance_funcs, quat_instance_funcs);

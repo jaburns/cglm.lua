@@ -72,11 +72,50 @@ function test_vec4()
 end
 
 function test_quat()
-    -- TODO
+    assert_vec4("quat add", quat(10,10,-10,7) + quat(5,100,5,-2), quat(15,110,-5,5))
+    assert_vec4("quat sub", quat(10,10,-10,7) - quat(5,100,5,-2), quat(5,-90,-15,9))
+    assert_vec4("quat mul", quat(1,-2,3,4) * quat(-5,6,7,-8), quat(-60,18,0,-36))
+
+    local q0 = quat(-0.6009133, 0.3675318, 0.06183508, 0.7071068)
+    local v0 = vec3(-0.7591431, -0.3433556, 0.5529997)
+    local v1 = vec3(-0.1202234, 0.67126, 0.7314072)
+    assert_vec3("quat mul_vec3", q0:mul_vec3(v0), v1)
+
+    assert_vec4("quat inverse", q0 * q0:inverse(), quat())
+
+    local s = 1 / math.sqrt(30)
+    assert_vec4("quat normalize", quat(1,2,3,4):normalize(), quat(s*1,s*2,s*3,s*4))
+    assert_float("quat sqr_length", vec4(1,2,3,4):sqr_length(), 30)
+
+    local q1 = quat(0.5844759,0.1298835,-0.2597671,-0.7576539)
+    local qr = quat(0.6055313,0.003286547,-0.2153544,-0.7661225)
+    assert_vec4("quat slerp_to", q0:slerp_to(q1, 0.75), qr)
 end
 
 function test_mat4()
-    -- TODO
+    local a = mat4()
+    a.c0.x = 1; a.c1.x = 2; a.c2.x = 3; a.c3.x = 4;   
+    a.c0.y = 5; a.c1.y =-6; a.c2.y =-7; a.c3.y = 8;   
+    a.c0.z = 9; a.c1.z =-8; a.c2.z =-7; a.c3.z = 6;   
+    a.c0.w = 5; a.c1.w = 4; a.c2.w = 3; a.c3.w = 2;   
+
+    local b = mat4()
+    b.c0.x = 2; b.c1.x = 6; b.c2.x =-8; b.c3.x = 4;   
+    b.c0.y = 3; b.c1.y = 7; b.c2.y =-7; b.c3.y = 3;   
+    b.c0.z = 4; b.c1.z = 8; b.c2.z =-6; b.c3.z = 2;   
+    b.c0.w = 5; b.c1.w = 9; b.c2.w =-5; b.c3.w = 1;   
+
+    local c = a * b
+    assert_vec4("mat4 mul c0", c.c0, vec4(40,4,-4,44))
+    assert_vec4("mat4 mul c1", c.c1, vec4(80,4,-4,100))
+    assert_vec4("mat4 mul c2", c.c2, vec4(-60,4,-4,-96))
+    assert_vec4("mat4 mul c3", c.c3, vec4(20,-4,4,40))
+
+    local inv = a:inverse()
+    assert_vec4("mat4 inverse c0", inv.c0, vec4(-1/18,-1/4,1/3,5/36))
+    assert_vec4("mat4 inverse c1", inv.c1, vec4(-1/14,1/4,-2/7,3/28))
+    assert_vec4("mat4 inverse c2", inv.c2, vec4(2/21,-1/4,3/14,-5/84))
+    assert_vec4("mat4 inverse c3", inv.c3, vec4(1/9,1/4,-1/6,-1/36))
 end
 
 function run_tests()
@@ -87,10 +126,10 @@ function run_tests()
     print("")
     test_vec4()
     print("")
---  test_quat()
---  print("")
---  test_mat4()
---  print("")
+    test_quat()
+    print("")
+    test_mat4()
+    print("")
     print("Tests passed: " .. tests_passed .. " / " .. tests_run)
     print("")
 end
