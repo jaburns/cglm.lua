@@ -175,10 +175,10 @@ static int l_##op(lua_State *L)            \
 }
 
 #define DECL_BINARY_TO_FLOAT_WRAPPER(T, name) \
-    static void name##_wrap(const T a, const T b, float *r) { *r = name(a, b); }
+    static void name##_wrap(T a, T b, float *r) { *r = name(a, b); }
 
 #define DECL_UNARY_TO_FLOAT_WRAPPER(T, name) \
-    static void name##_wrap(const T a, float *r) { *r = name(a); }
+    static void name##_wrap(T a, float *r) { *r = name(a); }
 
 DECL_BINARY_OP(vec2, vec2, vec2, ex_vec2_add);
 DECL_BINARY_OP(vec2, vec2, vec2, ex_vec2_sub);
@@ -224,8 +224,8 @@ DECL_UNARY_OP(mat4, mat4, glm_mat4_inv);
 static int l_vec2(lua_State *L)
 {
     vec2 v = {
-        lua_isnumber(L, 2) ? lua_tonumber(L, 2) : 0,
-        lua_isnumber(L, 3) ? lua_tonumber(L, 3) : 0,
+        (float)(lua_isnumber(L, 2) ? lua_tonumber(L, 2) : 0),
+        (float)(lua_isnumber(L, 3) ? lua_tonumber(L, 3) : 0)
     };
     glmlua_push_vec2(L, v);
     return 1;
@@ -234,9 +234,9 @@ static int l_vec2(lua_State *L)
 static int l_vec3(lua_State *L)
 {
     vec3 v = {
-        lua_isnumber(L, 2) ? lua_tonumber(L, 2) : 0,
-        lua_isnumber(L, 3) ? lua_tonumber(L, 3) : 0,
-        lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0
+        (float)(lua_isnumber(L, 2) ? lua_tonumber(L, 2) : 0),
+        (float)(lua_isnumber(L, 3) ? lua_tonumber(L, 3) : 0),
+        (float)(lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0)
     };
     glmlua_push_vec3(L, v);
     return 1;
@@ -245,10 +245,10 @@ static int l_vec3(lua_State *L)
 static int l_vec4(lua_State *L)
 {
     vec4 v = {
-        lua_isnumber(L, 2) ? lua_tonumber(L, 2) : 0,
-        lua_isnumber(L, 3) ? lua_tonumber(L, 3) : 0,
-        lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0,
-        lua_isnumber(L, 5) ? lua_tonumber(L, 5) : 0
+        (float)(lua_isnumber(L, 2) ? lua_tonumber(L, 2) : 0),
+        (float)(lua_isnumber(L, 3) ? lua_tonumber(L, 3) : 0),
+        (float)(lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0),
+        (float)(lua_isnumber(L, 5) ? lua_tonumber(L, 5) : 0)
     };
     glmlua_push_vec4(L, v);
     return 1;
@@ -257,10 +257,10 @@ static int l_vec4(lua_State *L)
 static int l_quat(lua_State *L)
 {
     versor v = {
-        lua_isnumber(L, 2) ? lua_tonumber(L, 2) : 0,
-        lua_isnumber(L, 3) ? lua_tonumber(L, 3) : 0,
-        lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0,
-        lua_isnumber(L, 5) ? lua_tonumber(L, 5) : 1
+        (float)(lua_isnumber(L, 2) ? lua_tonumber(L, 2) : 0),
+        (float)(lua_isnumber(L, 3) ? lua_tonumber(L, 3) : 0),
+        (float)(lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0),
+        (float)(lua_isnumber(L, 5) ? lua_tonumber(L, 5) : 0)
     };
     glmlua_push_quat(L, v);
     return 1;
@@ -290,13 +290,13 @@ typedef struct TypeDef
     const char *static_metatable_name;
     lua_CFunction constructor;
 
-    int num_instance_meta_funcs;
+    size_t num_instance_meta_funcs;
     const FuncDef *instance_meta_funcs;
 
-    int num_instance_funcs;
+    size_t num_instance_funcs;
     const FuncDef *instance_funcs;
 
-    int num_static_funcs;
+    size_t num_static_funcs;
     const FuncDef *static_funcs;
 }
 TypeDef;
