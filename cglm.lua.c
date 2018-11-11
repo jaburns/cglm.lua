@@ -215,6 +215,8 @@ DECL_UNARY_OP(versor, versor, glm_quat_inv);
 DECL_UNARY_OP(versor, versor, glm_quat_normalize_to);
 DECL_BINARY_OP(versor, vec3, vec3, glm_quat_rotatev);
 DECL_TERNARY_OP(versor, versor, vec1, versor, glm_quat_slerp_wrap);
+DECL_TERNARY_OP(vec3, vec3, vec3, versor, glm_quat_for);
+
 
 DECL_BINARY_OP(mat4, mat4, mat4, glm_mat4_mul);
 DECL_UNARY_OP(mat4, mat4, glm_mat4_inv);
@@ -380,8 +382,10 @@ static const FuncDef quat_instance_funcs[] = {
 };
 DECL_ARRAY_SIZE(num_quat_instance_funcs, quat_instance_funcs);
 
-static const FuncDef quat_static_funcs[] = { 0 };
-static const size_t num_quat_static_funcs = 0;
+static const FuncDef quat_static_funcs[] = {
+    { "look_rotation", l_glm_quat_for },
+};
+static const size_t num_quat_static_funcs = 1;
 
 // -----  mat4  -----
 

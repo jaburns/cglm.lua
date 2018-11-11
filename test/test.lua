@@ -90,6 +90,8 @@ function test_quat()
     local q1 = quat(0.5844759,0.1298835,-0.2597671,-0.7576539)
     local qr = quat(0.6055313,0.003286547,-0.2153544,-0.7661225)
     assert_vec4("quat slerp_to", q0:slerp_to(q1, 0.75), qr)
+
+    -- TODO test quat.look_rotation()
 end
 
 function test_mat4()
